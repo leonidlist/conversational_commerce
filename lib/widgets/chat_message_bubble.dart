@@ -12,7 +12,7 @@ class ChatMessageBubble extends StatelessWidget {
     final isUser = message.isUser;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+      margin: EdgeInsets.symmetric(vertical: 4, horizontal: isUser ? 16 : 0),
       child: Row(
         mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
