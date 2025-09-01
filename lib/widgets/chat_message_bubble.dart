@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import '../models/chat_message.dart';
 import 'product_card.dart';
 
@@ -30,10 +31,17 @@ class ChatMessageBubble extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      message.content,
-                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 16),
-                    ),
+                    child:
+                        message.isUser
+                            ? Text(
+                              message.content,
+                              style: const TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                            : _MarkdownMessageContent(content: message.content),
                   ),
                   const SizedBox(height: 4),
                   Padding(
@@ -90,5 +98,65 @@ class ChatMessageBubble extends StatelessWidget {
     } else {
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
+  }
+}
+
+class _MarkdownMessageContent extends StatelessWidget {
+  final String content;
+
+  const _MarkdownMessageContent({required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    if (content.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final config = MarkdownConfig.darkConfig.copy(
+      configs: [
+        PConfig(
+          textStyle: const TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 16,
+            height: 1.4,
+          ),
+        ),
+        H1Config(
+          style: const TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        H2Config(
+          style: const TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        H3Config(
+          style: const TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        CodeConfig(
+          style: const TextStyle(
+            color: Color(0xFF4ADEAA),
+            backgroundColor: Color(0xFF1A1A1A),
+            fontFamily: 'monospace',
+          ),
+        ),
+      ],
+    );
+
+    return MarkdownWidget(
+      data: content,
+      config: config,
+      shrinkWrap: true,
+      selectable: true,
+    );
   }
 }
