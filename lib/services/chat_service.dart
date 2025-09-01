@@ -45,10 +45,30 @@ class ChatService {
 
       if (response.statusCode == 200 && response.data != null) {
         final stream = response.data!.stream;
+        StringBuffer buffer = StringBuffer();
+
         await for (final bytes in stream) {
           final chunk = utf8.decode(bytes);
-          if (chunk.trim().isNotEmpty) {
-            yield chunk.trim();
+          buffer.write(chunk);
+
+          // Process complete lines
+          String content = buffer.toString();
+          List<String> lines = content.split('\n');
+
+          // Keep the last potentially incomplete line in buffer
+          buffer.clear();
+          if (lines.isNotEmpty && !content.endsWith('\n')) {
+            buffer.write(lines.removeLast());
+          }
+
+          // Process complete lines
+          for (final line in lines) {
+            if (line.trim().isNotEmpty) {
+              final textContent = _parseStreamLine(line.trim());
+              if (textContent != null) {
+                yield textContent;
+              }
+            }
           }
         }
       } else {
@@ -62,6 +82,24 @@ class ChatService {
       throw Exception('Network error: ${e.message}');
     } catch (e) {
       throw Exception('Error sending message: $e');
+    }
+  }
+
+  String? _parseStreamLine(String line) {
+    try {
+      // Check if line starts with "0:" (text content)
+      if (line.startsWith('0:')) {
+        final jsonPart = line.substring(2); // Remove "0:" prefix
+        final decodedJson = jsonDecode(jsonPart);
+        if (decodedJson is String) {
+          return decodedJson;
+        }
+      }
+      // Ignore other line types (f:, 9:, a:, e:, d:)
+      return null;
+    } catch (e) {
+      // If parsing fails, ignore this line
+      return null;
     }
   }
 }

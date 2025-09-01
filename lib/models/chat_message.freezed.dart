@@ -24,6 +24,7 @@ mixin _$ChatMessage {
   String get content => throw _privateConstructorUsedError;
   MessageRole get role => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
+  List<Product> get products => throw _privateConstructorUsedError;
 
   /// Serializes this ChatMessage to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,7 +43,12 @@ abstract class $ChatMessageCopyWith<$Res> {
     $Res Function(ChatMessage) then,
   ) = _$ChatMessageCopyWithImpl<$Res, ChatMessage>;
   @useResult
-  $Res call({String content, MessageRole role, DateTime timestamp});
+  $Res call({
+    String content,
+    MessageRole role,
+    DateTime timestamp,
+    List<Product> products,
+  });
 }
 
 /// @nodoc
@@ -63,6 +69,7 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
     Object? content = null,
     Object? role = null,
     Object? timestamp = null,
+    Object? products = null,
   }) {
     return _then(
       _value.copyWith(
@@ -81,6 +88,11 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
                     ? _value.timestamp
                     : timestamp // ignore: cast_nullable_to_non_nullable
                         as DateTime,
+            products:
+                null == products
+                    ? _value.products
+                    : products // ignore: cast_nullable_to_non_nullable
+                        as List<Product>,
           )
           as $Val,
     );
@@ -96,7 +108,12 @@ abstract class _$$ChatMessageImplCopyWith<$Res>
   ) = __$$ChatMessageImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String content, MessageRole role, DateTime timestamp});
+  $Res call({
+    String content,
+    MessageRole role,
+    DateTime timestamp,
+    List<Product> products,
+  });
 }
 
 /// @nodoc
@@ -116,6 +133,7 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
     Object? content = null,
     Object? role = null,
     Object? timestamp = null,
+    Object? products = null,
   }) {
     return _then(
       _$ChatMessageImpl(
@@ -134,6 +152,11 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
                 ? _value.timestamp
                 : timestamp // ignore: cast_nullable_to_non_nullable
                     as DateTime,
+        products:
+            null == products
+                ? _value._products
+                : products // ignore: cast_nullable_to_non_nullable
+                    as List<Product>,
       ),
     );
   }
@@ -146,7 +169,8 @@ class _$ChatMessageImpl implements _ChatMessage {
     required this.content,
     required this.role,
     required this.timestamp,
-  });
+    final List<Product> products = const [],
+  }) : _products = products;
 
   factory _$ChatMessageImpl.fromJson(Map<String, dynamic> json) =>
       _$$ChatMessageImplFromJson(json);
@@ -157,10 +181,18 @@ class _$ChatMessageImpl implements _ChatMessage {
   final MessageRole role;
   @override
   final DateTime timestamp;
+  final List<Product> _products;
+  @override
+  @JsonKey()
+  List<Product> get products {
+    if (_products is EqualUnmodifiableListView) return _products;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_products);
+  }
 
   @override
   String toString() {
-    return 'ChatMessage(content: $content, role: $role, timestamp: $timestamp)';
+    return 'ChatMessage(content: $content, role: $role, timestamp: $timestamp, products: $products)';
   }
 
   @override
@@ -171,12 +203,19 @@ class _$ChatMessageImpl implements _ChatMessage {
             (identical(other.content, content) || other.content == content) &&
             (identical(other.role, role) || other.role == role) &&
             (identical(other.timestamp, timestamp) ||
-                other.timestamp == timestamp));
+                other.timestamp == timestamp) &&
+            const DeepCollectionEquality().equals(other._products, _products));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, content, role, timestamp);
+  int get hashCode => Object.hash(
+    runtimeType,
+    content,
+    role,
+    timestamp,
+    const DeepCollectionEquality().hash(_products),
+  );
 
   /// Create a copy of ChatMessage
   /// with the given fields replaced by the non-null parameter values.
@@ -197,6 +236,7 @@ abstract class _ChatMessage implements ChatMessage {
     required final String content,
     required final MessageRole role,
     required final DateTime timestamp,
+    final List<Product> products,
   }) = _$ChatMessageImpl;
 
   factory _ChatMessage.fromJson(Map<String, dynamic> json) =
@@ -208,6 +248,8 @@ abstract class _ChatMessage implements ChatMessage {
   MessageRole get role;
   @override
   DateTime get timestamp;
+  @override
+  List<Product> get products;
 
   /// Create a copy of ChatMessage
   /// with the given fields replaced by the non-null parameter values.

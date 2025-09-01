@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'product.dart';
 
 part 'chat_message.freezed.dart';
 part 'chat_message.g.dart';
@@ -16,6 +17,7 @@ class ChatMessage with _$ChatMessage {
     required String content,
     required MessageRole role,
     required DateTime timestamp,
+    @Default([]) List<Product> products,
   }) = _ChatMessage;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) =>
@@ -27,10 +29,14 @@ class ChatMessage with _$ChatMessage {
     timestamp: DateTime.now(),
   );
 
-  factory ChatMessage.assistant({required String content}) => ChatMessage(
+  factory ChatMessage.assistant({
+    required String content,
+    List<Product>? products,
+  }) => ChatMessage(
     content: content,
     role: MessageRole.assistant,
     timestamp: DateTime.now(),
+    products: products ?? [],
   );
 }
 

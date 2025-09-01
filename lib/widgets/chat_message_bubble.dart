@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
+import 'product_card.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
@@ -36,6 +37,31 @@ class ChatMessageBubble extends StatelessWidget {
                     _formatTime(message.timestamp),
                     style: TextStyle(color: Color(0x88FFFFFF), fontSize: 12),
                   ),
+
+                  // Show products if this is an assistant message with products
+                  if (message.isAssistant && message.products.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 440,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.only(right: 16),
+                        itemCount: message.products.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            width: 280,
+                            margin: EdgeInsets.only(
+                              right:
+                                  index < message.products.length - 1 ? 12 : 0,
+                            ),
+                            child: ProductCard(
+                              product: message.products[index],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
