@@ -34,32 +34,13 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(isLoading: true));
 
     try {
-      String assistantResponse = '';
-      ChatMessage? assistantMessage;
-
-      await for (final chunk in _chatService.sendMessageStream(
+      final assistantMessage = await _chatService.sendMessage(
         message: userMessage,
         threadId: state.threadId,
         resourceId: state.resourceId,
-      )) {
-        assistantResponse += chunk;
+      );
 
-        if (assistantMessage == null) {
-          // Create the assistant message on first chunk
-          assistantMessage = ChatMessage.assistant(content: assistantResponse);
-          addMessage(assistantMessage);
-        } else {
-          // Update the existing message with accumulated content
-          final updatedMessages =
-              state.messages.map((msg) {
-                if (msg == assistantMessage) {
-                  return assistantMessage!.copyWith(content: assistantResponse);
-                }
-                return msg;
-              }).toList();
-          emit(state.copyWith(messages: updatedMessages));
-        }
-      }
+      addMessage(assistantMessage);
     } catch (e) {
       emit(state.copyWith(error: 'Failed to get response from our AI agent'));
       debugPrint('Error sending message: $e');

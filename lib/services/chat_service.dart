@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/chat_message.dart';
+import '../models/product.dart';
 
 const String _baseUrl =
     'https://convai-agents-staging.on.com/api/agents/copilotAgent/stream';
@@ -27,11 +28,11 @@ class ChatService {
 
   late final Dio _dio;
 
-  Stream<String> sendMessageStream({
+  Future<ChatMessage> sendMessage({
     required ChatMessage message,
     required String threadId,
     required String resourceId,
-  }) async* {
+  }) async {
     try {
       final response = await _dio.post<ResponseBody>(
         _baseUrl,
@@ -46,6 +47,8 @@ class ChatService {
       if (response.statusCode == 200 && response.data != null) {
         final stream = response.data!.stream;
         StringBuffer buffer = StringBuffer();
+        StringBuffer assistantResponse = StringBuffer();
+        List<Product> products = [];
 
         await for (final bytes in stream) {
           final chunk = utf8.decode(bytes);
@@ -64,13 +67,22 @@ class ChatService {
           // Process complete lines
           for (final line in lines) {
             if (line.trim().isNotEmpty) {
-              final textContent = _parseStreamLine(line.trim());
-              if (textContent != null) {
-                yield textContent;
+              final lineData = _parseStreamLine(line.trim());
+              if (lineData != null) {
+                if (lineData['type'] == 'text') {
+                  assistantResponse.write(lineData['content']);
+                } else if (lineData['type'] == 'products') {
+                  products.addAll(lineData['products'] as List<Product>);
+                }
               }
             }
           }
         }
+
+        return ChatMessage.assistant(
+          content: assistantResponse.toString(),
+          products: products,
+        );
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -85,17 +97,45 @@ class ChatService {
     }
   }
 
-  String? _parseStreamLine(String line) {
+  Map<String, dynamic>? _parseStreamLine(String line) {
     try {
       // Check if line starts with "0:" (text content)
       if (line.startsWith('0:')) {
         final jsonPart = line.substring(2); // Remove "0:" prefix
         final decodedJson = jsonDecode(jsonPart);
         if (decodedJson is String) {
-          return decodedJson;
+          return {'type': 'text', 'content': decodedJson};
         }
       }
-      // Ignore other line types (f:, 9:, a:, e:, d:)
+      // Check if line starts with "a:" (tool call result)
+      else if (line.startsWith('a:')) {
+        final jsonPart = line.substring(2); // Remove "a:" prefix
+        final decodedJson = jsonDecode(jsonPart);
+
+        // Check if this is a product search result
+        if (decodedJson is Map<String, dynamic> &&
+            decodedJson.containsKey('result') &&
+            decodedJson['result'] is List) {
+          final results = decodedJson['result'] as List;
+          final products = <Product>[];
+
+          for (final result in results) {
+            try {
+              if (result is Map<String, dynamic>) {
+                products.add(Product.fromApiResult(result));
+              }
+            } catch (e) {
+              // Skip invalid product data
+              continue;
+            }
+          }
+
+          if (products.isNotEmpty) {
+            return {'type': 'products', 'products': products};
+          }
+        }
+      }
+      // Ignore other line types (f:, 9:, e:, d:)
       return null;
     } catch (e) {
       // If parsing fails, ignore this line
