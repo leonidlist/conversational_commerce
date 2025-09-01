@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import '../models/chat_message.dart';
 import '../models/product.dart';
 
@@ -28,11 +30,11 @@ class ChatService {
 
   late final Dio _dio;
 
-  Future<ChatMessage> sendMessage({
+  Stream<Map<String, dynamic>> sendMessageStream({
     required ChatMessage message,
     required String threadId,
     required String resourceId,
-  }) async {
+  }) async* {
     try {
       final response = await _dio.post<ResponseBody>(
         _baseUrl,
@@ -47,8 +49,6 @@ class ChatService {
       if (response.statusCode == 200 && response.data != null) {
         final stream = response.data!.stream;
         StringBuffer buffer = StringBuffer();
-        StringBuffer assistantResponse = StringBuffer();
-        List<Product> products = [];
 
         await for (final bytes in stream) {
           final chunk = utf8.decode(bytes);
@@ -67,22 +67,17 @@ class ChatService {
           // Process complete lines
           for (final line in lines) {
             if (line.trim().isNotEmpty) {
+              debugPrint(
+                'Processing line: ${line.substring(0, math.min(100, line.length))}...',
+              );
               final lineData = _parseStreamLine(line.trim());
               if (lineData != null) {
-                if (lineData['type'] == 'text') {
-                  assistantResponse.write(lineData['content']);
-                } else if (lineData['type'] == 'products') {
-                  products.addAll(lineData['products'] as List<Product>);
-                }
+                debugPrint('Yielding: ${lineData['type']}');
+                yield lineData;
               }
             }
           }
         }
-
-        return ChatMessage.assistant(
-          content: assistantResponse.toString(),
-          products: products,
-        );
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -104,6 +99,7 @@ class ChatService {
         final jsonPart = line.substring(2); // Remove "0:" prefix
         final decodedJson = jsonDecode(jsonPart);
         if (decodedJson is String) {
+          debugPrint('Found text content: "$decodedJson"');
           return {'type': 'text', 'content': decodedJson};
         }
       }
@@ -131,6 +127,7 @@ class ChatService {
           }
 
           if (products.isNotEmpty) {
+            debugPrint('Found ${products.length} products');
             return {'type': 'products', 'products': products};
           }
         }

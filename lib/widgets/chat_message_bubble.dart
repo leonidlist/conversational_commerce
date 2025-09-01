@@ -20,7 +20,7 @@ class ChatMessageBubble extends StatelessWidget {
         children: [
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: isUser ? Color(0xFF111111) : null,
                 borderRadius: BorderRadius.circular(20),
@@ -28,14 +28,20 @@ class ChatMessageBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.content,
-                    style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      message.content,
+                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 16),
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    _formatTime(message.timestamp),
-                    style: TextStyle(color: Color(0x88FFFFFF), fontSize: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      _formatTime(message.timestamp),
+                      style: TextStyle(color: Color(0x88FFFFFF), fontSize: 12),
+                    ),
                   ),
 
                   // Show products if this is an assistant message with products
@@ -45,7 +51,7 @@ class ChatMessageBubble extends StatelessWidget {
                       height: 440,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.only(right: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: message.products.length,
                         itemBuilder: (context, index) {
                           return Container(
